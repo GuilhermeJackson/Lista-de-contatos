@@ -1,6 +1,8 @@
 package com.example.minhaagenda.data.model;
 
-public class Contato {
+import java.io.Serializable;
+
+public class Contato implements Serializable {
     private int id;
     private String nome;
     private String email;

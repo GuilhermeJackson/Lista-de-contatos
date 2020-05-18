@@ -3,6 +3,7 @@ package com.example.minhaagenda.ui.activity;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -14,6 +15,7 @@ import com.example.minhaagenda.data.dao.ContatoDAO;
 import com.example.minhaagenda.data.model.Contato;
 
 public class CadastraActivity extends AppCompatActivity {
+    public static final String PARAMETRO_CONTATO = "PARAMETRO_CONTATO";
     private Contato contato;
     private EditText viewNome, viewEmail, viewTelefone;
     private ImageView viewImagem;
@@ -21,15 +23,25 @@ public class CadastraActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_cadastra);
-
         viewNome = findViewById(R.id.cadastro_nome);
         viewEmail = findViewById(R.id.cadastro_email);
         viewTelefone = findViewById(R.id.cadastro_telefone);
         viewImagem = findViewById(R.id.cadastro_image);
 
-
-
         contato = new Contato();
+        Intent intent = getIntent();
+        if(intent.hasExtra(PARAMETRO_CONTATO)){
+            Contato contatoRecuperado = (Contato) intent.getSerializableExtra(PARAMETRO_CONTATO);
+            contato = contatoRecuperado;
+            popularTela();
+        }
+    }
+
+    private void popularTela() {
+        viewNome.setText(contato.getNome());
+        viewEmail.setText(contato.getEmail());
+        viewTelefone.setText(contato.getTelefone());
+        //viewImagem.setText(contato.getNome());
     }
 
     //insere o menu na tela
@@ -51,7 +63,11 @@ public class CadastraActivity extends AppCompatActivity {
     private void salvarContato() {
         pegaValoresTela();
         ContatoDAO dao = new ContatoDAO(this);
-        dao.insere(contato);
+        if(contato.getId() == 0)
+            dao.insere(contato);
+        else
+            dao.edita(contato);
+
         dao.close();
 
         finish();

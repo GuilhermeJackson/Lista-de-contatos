@@ -59,16 +59,28 @@ public class ContatoDAO extends SQLiteOpenHelper {
 
     // Atribuido id ao contato
     public void insere(Contato contato) {
+        ContentValues cv = criaContentValues(contato);
+
+        SQLiteDatabase db = getWritableDatabase();
+        long id = db.insert("Contato", null, cv); //retorna o id atribuido
+        contato.setId((int) id);
+
+    }
+    private ContentValues criaContentValues(Contato contato){
         ContentValues cv = new ContentValues();
         cv.put("nome", contato.getNome());
         cv.put("email", contato.getEmail());
         cv.put("telefone", contato.getTelefone());
         cv.put("imagem", contato.getImagem());
         cv.put("excluido", contato.getExcluido());
+        return cv;
+    }
+
+    public void edita(Contato contato) {
+        ContentValues cv = criaContentValues(contato);
+        String sql = " id = " + contato.getId();
 
         SQLiteDatabase db = getWritableDatabase();
-        long id = db.insert("Contato", null, cv); //retorna o id atribuido
-        contato.setId((int) id);
-
+        db.update("Contato", cv, sql,null);
     }
 }
