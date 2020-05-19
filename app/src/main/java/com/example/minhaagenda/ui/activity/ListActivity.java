@@ -3,7 +3,10 @@ package com.example.minhaagenda.ui.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
@@ -46,19 +49,41 @@ public class ListActivity extends AppCompatActivity {
                 startActivity(new Intent(ListActivity.this, CadastraActivity.class));
             }
         });
-    }
 
+        //Registrar menu de contexto (quando deixa clicado no item exibe mensagem de apagar)
+        registerForContextMenu(listaContatosView);
+    }
     @Override
     protected void onResume() {
         super.onResume();
+        criaAdapter();
+    }
+    private void criaAdapter() {
         listaContatosView.setAdapter(new ListaAdapter(this, getContatos()));
     }
-
     private ArrayList<Contato> getContatos() {
         contatos = new ArrayList<>();
         ContatoDAO contatoDAO = new ContatoDAO(this);
         contatos = contatoDAO.buscaContatos();
         contatoDAO.close();
         return contatos;
+    }
+
+    //Cria ação do contextMenu (pressionar o item e exibir mensagem)
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
+        final Contato contato = (Contato)listaContatosView.getItemAtPosition(info.position);
+        MenuItem del = menu.add("Apagar esse contato");
+        del.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                ContatoDAO dao = new ContatoDAO(ListActivity.this);
+                dao.remove(contato);
+                dao.close();
+                criaAdapter();
+                return false;
+            }
+        });
     }
 }

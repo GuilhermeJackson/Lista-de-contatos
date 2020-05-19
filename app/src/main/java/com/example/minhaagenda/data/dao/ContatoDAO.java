@@ -83,4 +83,9 @@ public class ContatoDAO extends SQLiteOpenHelper {
         SQLiteDatabase db = getWritableDatabase();
         db.update("Contato", cv, sql,null);
     }
+
+    public void remove(Contato contato) {
+        contato.setExcluido(1);
+        edita(contato);
+    }
 }
