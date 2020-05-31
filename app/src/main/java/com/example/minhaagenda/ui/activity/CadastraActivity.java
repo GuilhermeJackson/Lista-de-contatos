@@ -46,6 +46,7 @@ public class CadastraActivity extends AppCompatActivity {
             popularTela();
         }
 
+        MascarasUtil.colocaMascara(viewTelefone, "(NN) NNNNN-NNNN");
 
         imageViewImagem.setOnClickListener(new View.OnClickListener() {
             @Override
