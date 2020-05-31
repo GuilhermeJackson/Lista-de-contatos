@@ -19,6 +19,7 @@ import com.example.minhaagenda.R;
 import com.example.minhaagenda.data.dao.ContatoDAO;
 import com.example.minhaagenda.data.model.Contato;
 import com.example.minhaagenda.util.ImagemUtils;
+import com.example.minhaagenda.util.MascarasUtil;
 
 import java.io.File;
 
@@ -27,7 +28,7 @@ public class CadastraActivity extends AppCompatActivity {
     private static final int CAMERA_REQUEST_CODE = 495;
     private Contato contato;
     private EditText viewNome, viewEmail, viewTelefone;
-    private ImageView viewImagem;
+    private ImageView imageViewImagem;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,7 +36,7 @@ public class CadastraActivity extends AppCompatActivity {
         viewNome = findViewById(R.id.cadastro_nome);
         viewEmail = findViewById(R.id.cadastro_email);
         viewTelefone = findViewById(R.id.cadastro_telefone);
-        viewImagem = findViewById(R.id.cadastro_image);
+        imageViewImagem = findViewById(R.id.cadastro_image);
 
         contato = new Contato();
         Intent intent = getIntent();
@@ -44,8 +45,9 @@ public class CadastraActivity extends AppCompatActivity {
             contato = contatoRecuperado;
             popularTela();
         }
-        
-        viewImagem.setOnClickListener(new View.OnClickListener() {
+
+
+        imageViewImagem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 chamarCamera();
@@ -71,7 +73,7 @@ public class CadastraActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CAMERA_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            ImagemUtils.setImagem(viewImagem, contato.getImagem());
+            ImagemUtils.setImagem(imageViewImagem, contato.getImagem());
         }
     }
 
@@ -79,7 +81,7 @@ public class CadastraActivity extends AppCompatActivity {
         viewNome.setText(contato.getNome());
         viewEmail.setText(contato.getEmail());
         viewTelefone.setText(contato.getTelefone());
-        //viewImagem.setText(contato.getNome());
+        ImagemUtils.setImagem(imageViewImagem, this.contato.getImagem());
     }
 
     //insere o menu na tela

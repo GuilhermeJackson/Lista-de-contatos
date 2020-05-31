@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.example.minhaagenda.R;
 import com.example.minhaagenda.data.model.Contato;
+import com.example.minhaagenda.util.ImagemUtils;
 
 import java.util.ArrayList;
 
@@ -51,7 +52,7 @@ public class ListaAdapter extends BaseAdapter {
 
         viewEmail.setText(contato.getEmail());
         viewNome.setText(contato.getNome());
-
+        ImagemUtils.setImagem(viewImage, contato.getImagem(), 60, 60);
         return convertView;
     }
 }
