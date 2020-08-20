@@ -7,12 +7,17 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.telephony.SmsManager;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -30,6 +35,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class ListActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSION = 821;
@@ -94,6 +100,42 @@ public class ListActivity extends AppCompatActivity {
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
         final Contato contato = (Contato) listaContatosView.getItemAtPosition(info.position);
+
+        MenuItem sms = menu.add("Envia sms");
+        sms.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                LayoutInflater inflater = LayoutInflater.from(ListActivity.this);
+                View view = inflater.inflate(R.layout.dialog_envia_sms, null);
+
+                TextView viewTelefone = view.findViewById(R.id.lista_dialog_telefone);
+                final EditText viewMensagem = view.findViewById(R.id.lista_dialog_mensagem);
+
+                String[] split = contato.getNome().split(" ");
+                String telefone = "Para: " + split[0] + " " + contato.getTelefone();
+                viewTelefone.setText(telefone);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(ListActivity.this);
+                builder.setTitle(getString(R.string.app_name));
+                builder.setView(view);
+
+                builder.setPositiveButton("Enviar", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String mensagem = viewMensagem.getText().toString();
+                        if (mensagem.isEmpty())
+                            return;
+                        eviarSMS(contato.getTelefone().trim(), mensagem);
+                    }
+                });
+                builder.setNegativeButton("Cancelar", null);
+                AlertDialog dialog = builder.create();
+                dialog.show();
+
+                return false;
+            }
+        });
+
         MenuItem del = menu.add("Apagar esse contato");
         del.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
@@ -107,6 +149,21 @@ public class ListActivity extends AppCompatActivity {
         });
     }
 
+    public String replaceAll(String regex, String replacement) {
+        return Pattern.compile(regex).matcher("0123456789").replaceAll(replacement);
+    }
+
+    private void eviarSMS(String telefone, String mensagem) {
+        try {
+            String telefoneTratado = replaceAll(telefone, "");
+            telefoneTratado = "+55" + telefoneTratado;
+            
+            SmsManager smsManager = SmsManager.getDefault();
+            smsManager.sendTextMessage(telefoneTratado, null, mensagem, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     private void validaPermissoes(String[] permissoes) {
         //verifica se a aplicação roda em um abiente q precisa de permissao
