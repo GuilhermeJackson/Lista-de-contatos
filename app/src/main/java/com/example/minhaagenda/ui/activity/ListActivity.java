@@ -1,6 +1,10 @@
 package com.example.minhaagenda.ui.activity;
 
+import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.ContextMenu;
@@ -10,7 +14,11 @@ import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ListView;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.example.minhaagenda.R;
 import com.example.minhaagenda.data.dao.ContatoDAO;
@@ -21,15 +29,24 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 public class ListActivity extends AppCompatActivity {
+    private static final int REQUEST_CODE_PERMISSION = 821;
     ListView listaContatosView;
     ArrayList<Contato> contatos;
+
+    private String[] permissoes = new String[]{
+            Manifest.permission.SEND_SMS,
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         listaContatosView = findViewById(R.id.lista_lista_contatos);
+
+        validaPermissoes(permissoes);
 
         listaContatosView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -53,14 +70,17 @@ public class ListActivity extends AppCompatActivity {
         //Registrar menu de contexto (quando deixa clicado no item exibe mensagem de apagar)
         registerForContextMenu(listaContatosView);
     }
+
     @Override
     protected void onResume() {
         super.onResume();
         criaAdapter();
     }
+
     private void criaAdapter() {
         listaContatosView.setAdapter(new ListaAdapter(this, getContatos()));
     }
+
     private ArrayList<Contato> getContatos() {
         contatos = new ArrayList<>();
         ContatoDAO contatoDAO = new ContatoDAO(this);
@@ -72,8 +92,8 @@ public class ListActivity extends AppCompatActivity {
     //Cria ação do contextMenu (pressionar o item e exibir mensagem)
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
-        final Contato contato = (Contato)listaContatosView.getItemAtPosition(info.position);
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+        final Contato contato = (Contato) listaContatosView.getItemAtPosition(info.position);
         MenuItem del = menu.add("Apagar esse contato");
         del.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
@@ -85,5 +105,57 @@ public class ListActivity extends AppCompatActivity {
                 return false;
             }
         });
+    }
+
+
+    private void validaPermissoes(String[] permissoes) {
+        //verifica se a aplicação roda em um abiente q precisa de permissao
+        if (Build.VERSION.SDK_INT >= 23) {
+            List<String> listaPermissoes = new ArrayList<>();
+            for (String permissao : permissoes) {
+                //se a permissao q esta solicitando ja foi atribuida a aplicação
+                Boolean validaPermissao = ContextCompat.checkSelfPermission(this, permissao) == PackageManager.PERMISSION_GRANTED;
+                if (!validaPermissao) {
+                    listaPermissoes.add(permissao);
+                }
+            }
+            if (!listaPermissoes.isEmpty()) {
+                String[] novasPermissoes = new String[listaPermissoes.size()];
+                listaPermissoes.toArray(novasPermissoes);
+                ActivityCompat.requestPermissions(ListActivity.this, novasPermissoes, REQUEST_CODE_PERMISSION);
+            }
+        }
+    }
+
+    //metodo para vê se as permissoes foram aceitas
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        for (int resultado : grantResults) {
+            //se a permissao for negada, faz uma ação
+            if (resultado == PackageManager.PERMISSION_DENIED) {
+                alertaValidaPermissao();
+            }
+        }
+    }
+
+    private void alertaValidaPermissao() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Permissões negadas");
+        builder.setMessage("Para utlizar esse APP, é necessário aceitar todas as permissões");
+        builder.setPositiveButton("Tentar novamente", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                validaPermissoes(permissoes);
+            }
+        });
+        builder.setNegativeButton("Cancelar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                finish();
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }
